@@ -1,11 +1,10 @@
 // ==UserScript==
-// @name         FireX (VIP Private Ultra-Safe)
+// @name         FireX
 // @namespace    FireX
-// @version      6.8
-// @description  FireX Match Again automation with ultra-safe private GitHub Gist authorization
+// @version      6.5
+// @description  FireX Match Again automation with external UID authorization
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
-// @connect      ://githubusercontent.com
 // @connect      ://github.com
 // @updateURL    https://githubusercontent.com
 // @downloadURL  https://githubusercontent.com
@@ -15,34 +14,17 @@
     'use strict';
 
     /* =========================================================
-       SETTINGS & STORAGE
+       SETTINGS
     ========================================================= */
-    let GIST_ID = localStorage.getItem("firex_gist_id") || "";
-    let GITHUB_TOKEN = localStorage.getItem("firex_github_token") || "";
-
-    if (!GIST_ID || !GITHUB_TOKEN) {
-        GIST_ID = prompt("🔥 FireX VIP Initial Setup:\nPlease enter your 32-character Gist ID:");
-        GITHUB_TOKEN = prompt("🔥 FireX VIP Initial Setup:\nPlease enter your GitHub Access Token (ghp_...):");
-        
-        if (GIST_ID && GITHUB_TOKEN) {
-            localStorage.setItem("firex_gist_id", GIST_ID.trim());
-            localStorage.setItem("firex_github_token", GITHUB_TOKEN.trim());
-            alert("VIP Configuration saved successfully! The page will now reload.");
-            window.location.reload();
-            return;
-        } else {
-            alert("Error: Script initialization failed. Missing required authorization data.");
-            return;
-        }
-    }
-
+    const GIST_ID = "ec184b4f5fd17e95db971dbb7811b1a4";
+    const GITHUB_TOKEN = "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";
     const TARGET_WAIT = 1000;
     const TELEGRAM_URL = "https://t.me";
     const EXPIRY_PATTERN = /Countdown\s+to\s+Expiry/i;
-    const FIREX_VERSION = "6.8-VIP";
+    const FIREX_VERSION = "6.5";
 
     /* =========================================================
-       STATE MANAGEMENT
+       STATE VARIABLES
     ========================================================= */
     let ALLOWED_REFERRAL_UIDS = new Set();
     let uidListLoaded = false;
@@ -61,6 +43,9 @@
     let firexStartLeft = 0, firexStartTop = 0;
     const FIREX_DRAG_THRESHOLD = 5;
 
+    /* =========================================================
+       UID DETECTION LOGIC
+    ========================================================= */
     function getPaywivoUID() {
         try {
             const raw = localStorage.getItem("memberId");
@@ -72,6 +57,7 @@
                 }
             }
         } catch (e) {}
+
         try {
             const el = document.querySelector(".x-main-head p.id");
             if (el) {
@@ -79,6 +65,7 @@
                 if (match) return match[1];
             }
         } catch (e) {}
+
         return null;
     }
 
@@ -201,7 +188,7 @@
     }
 
     /* =========================================================
-       DYNAMIC UI COMPONENTS
+       UI COMPONENTS
     ========================================================= */
     function createUI() {
         if (document.getElementById("firex-auto-panel")) return;
@@ -218,3 +205,8 @@
             #firex-stop { background: #b3261e; color: #fff; }
             #firex-telegram { background: #111; color: #fff; border: 1px solid #333; display: flex; align-items: center; justify-content: center; gap: 7px; text-decoration: none; box-sizing: border-box; }
             #firex-auth { margin-top: 10px; padding: 9px; border-radius: 8px; background: #111; font-size: 11px; line-height: 1.4; text-align: center; word-break: break-word; }
+            #firex-minimize { position: absolute; top: 7px; right: 9px; border: none; background: transparent; color: #aaa; font-size: 18px; cursor: pointer; }
+            #firex-auto-panel button, #firex-auto-panel a { touch-action: auto; user-select: auto; cursor: pointer; }
+            #firex-auto-panel.minimized { width: 62px; height: 62px; padding: 0; border-radius: 50%; background: #000; cursor: grab; }
+            #firex-auto-panel.minimized #firex-fire { width: 62px; height: 62px; margin: 0; font-size: 30px; border-radius: 50%; }
+            #firex-auto-panel.minimized #firex-status-dot { width: 12px; height: 12px; right: 2px; bottom: 2px; }
