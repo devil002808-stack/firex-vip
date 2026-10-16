@@ -1,38 +1,48 @@
 // ==UserScript==
-// @name         FireX (VIP Private Custom)
+// @name         FireX (VIP Private Ultra-Safe)
 // @namespace    FireX
-// @version      6.6
-// @description  FireX Match Again automation with private GitHub Gist UID authorization
+// @version      6.8
+// @description  FireX Match Again automation with ultra-safe private GitHub Gist authorization
 // @match        *://*/*
 // @grant        GM_xmlhttpRequest
 // @connect      ://githubusercontent.com
 // @connect      ://github.com
+// @updateURL    https://githubusercontent.com
+// @downloadURL  https://githubusercontent.com
 // ==/UserScript==
 
 (function () {
     'use strict';
 
     /* =========================================================
-       VIP PRIVATE SETTINGS
+       SETTINGS & STORAGE
     ========================================================= */
+    let GIST_ID = localStorage.getItem("firex_gist_id") || "";
+    let GITHUB_TOKEN = localStorage.getItem("firex_github_token") || "";
 
-    // 1. आपकी Gist ID (ऑटो-सैट)
-    const GIST_ID = "ec184b4f5fd17e95db971dbb7811b1a4";
+    if (!GIST_ID || !GITHUB_TOKEN) {
+        GIST_ID = prompt("🔥 FireX VIP Initial Setup:\nPlease enter your 32-character Gist ID:");
+        GITHUB_TOKEN = prompt("🔥 FireX VIP Initial Setup:\nPlease enter your GitHub Access Token (ghp_...):");
+        
+        if (GIST_ID && GITHUB_TOKEN) {
+            localStorage.setItem("firex_gist_id", GIST_ID.trim());
+            localStorage.setItem("firex_github_token", GITHUB_TOKEN.trim());
+            alert("VIP Configuration saved successfully! The page will now reload.");
+            window.location.reload();
+            return;
+        } else {
+            alert("Error: Script initialization failed. Missing required authorization data.");
+            return;
+        }
+    }
 
-    // 2. आपका सीक्रेट गिटहब टोकन (ऑटो-सैट)
-    const GITHUB_TOKEN = "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";
-
-    // बटन क्लिक होने का वेटिंग टाइम (1000ms = 1 सेकंड)
     const TARGET_WAIT = 1000;
-
-    // टेलीग्राम चैनल लिंक
     const TELEGRAM_URL = "https://t.me";
-
     const EXPIRY_PATTERN = /Countdown\s+to\s+Expiry/i;
-    const FIREX_VERSION = "6.6-VIP";
+    const FIREX_VERSION = "6.8-VIP";
 
     /* =========================================================
-       STATE & UI MANAGEMENT
+       STATE MANAGEMENT
     ========================================================= */
     let ALLOWED_REFERRAL_UIDS = new Set();
     let uidListLoaded = false;
@@ -94,7 +104,7 @@
     }
 
     /* =========================================================
-       LOAD UID LIST FROM PRIVATE GITHUB GIST
+       API AUTHORIZATION SERVICE
     ========================================================= */
     function loadUIDList(retryNumber = 0) {
         const url = `https://://github.com/gists/${GIST_ID}?t=${Date.now()}`;
@@ -114,7 +124,7 @@
                 }
                 try {
                     const gistData = JSON.parse(response.responseText);
-                    const fileKey = Object.keys(gistData.files)[0]; 
+                    const fileKey = Object.keys(gistData.files); 
                     const content = gistData.files[fileKey].content;
 
                     const lines = String(content || "").split(/\r?\n/).map(x => x.trim());
@@ -191,7 +201,7 @@
     }
 
     /* =========================================================
-       INTERFACE (UI) CREATION
+       DYNAMIC UI COMPONENTS
     ========================================================= */
     function createUI() {
         if (document.getElementById("firex-auto-panel")) return;
@@ -208,8 +218,3 @@
             #firex-stop { background: #b3261e; color: #fff; }
             #firex-telegram { background: #111; color: #fff; border: 1px solid #333; display: flex; align-items: center; justify-content: center; gap: 7px; text-decoration: none; box-sizing: border-box; }
             #firex-auth { margin-top: 10px; padding: 9px; border-radius: 8px; background: #111; font-size: 11px; line-height: 1.4; text-align: center; word-break: break-word; }
-            #firex-minimize { position: absolute; top: 7px; right: 9px; border: none; background: transparent; color: #aaa; font-size: 18px; cursor: pointer; }
-            #firex-auto-panel button, #firex-auto-panel a { touch-action: auto; user-select: auto; cursor: pointer; }
-            #firex-auto-panel.minimized { width: 62px; height: 62px; padding: 0; border-radius: 50%; background: #000; cursor: grab; }
-            #firex-auto-panel.minimized #firex-fire { width: 62px; height: 62px; margin: 0; font-size: 30px; border-radius: 50%; }
-            #firex-auto-panel.minimized #firex-status-dot { width: 12px; height: 12px; right: 2px; bottom: 2px; }
